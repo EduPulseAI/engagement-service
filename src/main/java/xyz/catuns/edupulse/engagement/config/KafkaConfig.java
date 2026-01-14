@@ -15,19 +15,7 @@ class KafkaConfig {
 	@Value("${spring.kafka.bootstrap-servers}")
 	private String bootstrapServers;
 
-	@Value("${spring.kafka.consumer.group-id}")
-	private String groupId;
-
-	@Bean
-	public ProducerFactory<String, Object> producerFactory(KafkaProperties kafkaProperties) {
-		Map<String, Object> config = kafkaProperties.buildProducerProperties();
-		// additional ProducerFactory properties;
-		return new DefaultKafkaProducerFactory<>(config);
-	}
-
-	@Bean
-	public KafkaTemplate<String, Object> kafkaTemplate(ProducerFactory<String, Object> producerFactory) {
-		return new KafkaTemplate<>(producerFactory);
-	}
+	@Value("${spring.kafka.streams.application-id}")
+	private String streamsAppId;
 
 }

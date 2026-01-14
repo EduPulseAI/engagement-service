@@ -16,3 +16,5 @@ logging:
       catuns:
         edupulse:
           engagement: debug
+
+server.port: 8082

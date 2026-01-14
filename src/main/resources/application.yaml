@@ -1,9 +1,30 @@
 app:
+  scoring:
+    weights:
+      dwell: 0.3
+      accuracy: 0.4
+      pacing: 0.3
+      attention: 0.0  # Not implemented yet
+
+    thresholds:
+      alert: 0.4
+      green: 0.7
+      yellow: 0.4
+
+    window:
+      duration-seconds: 60
+      grace-period-seconds: 5
+
+    baseline:
+      expected-time-per-question-seconds: 120
+      expected-questions-per-minute: 0.5
   kafka:
     partitions: 1
     topics:
-      appTopic: engagement-service-events
-    replicas: 1
+      answer: quiz.answers
+      session: session.events
+      engagement: engagement.scores
+    replicas: 3
   open-api:
     description: @project.description@
     title: @project.name@
@@ -12,43 +33,54 @@ spring:
   application:
     name: engagement-service
   kafka:
-    producer:
-      retries: 10
-      acks: all
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      properties:
-        delivery:
-          timeout: 60000
-        request:
-          timeout:
-            ms: 30000
-        linger:
-          ms: 0
-        max:
-          inflight:
-            requests:
-              per:
-                connection: 5
-        enable:
-          idempotence: true
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    consumer:
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      group-id: engagement-service-group
+    properties:
+      # Confluent security
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username='${KAFKA_API_KEY}' password='${KAFKA_API_SECRET}';
+
+      # Schema Registry auth
+      basic.auth.credentials.source: USER_INFO
+      schema.registry.basic.auth.user.info: ${SCHEMA_REGISTRY_API_KEY}:${SCHEMA_REGISTRY_API_SECRET}
+      schema.registry.url: ${SCHEMA_REGISTRY_URL}
+
+    streams:
+      application-id: engagement-service-streams
+      replication-factor: 3
       properties:
-        spring:
-          json:
-            trusted:
-              packages: xyz.catuns.edupulse.engagement.*
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        # State store configuration
+        state.dir: /tmp/kafka-streams/engagement-service
+
+        # Processing guarantees
+        processing.guarantee: exactly_once_v2
+
+        # Commit interval
+        commit.interval.ms: 1000
+
+        # Cache size (per thread)
+        cache.max.bytes.buffering: 10485760  # 10 MB
+
+        # RocksDB tuning
+        rocksdb.config.setter: xyz.catuns.edupulse.engagement.config.RocksDBConfigSetter
+
+        # Metrics
+        metrics.recording.level: INFO
+
+        # Error handling
+        default.deserialization.exception.handler: xyz.catuns.edupulse.engagement.exception.DeserializationExceptionHandler
+        default.production.exception.handler: org.apache.kafka.streams.errors.DefaultProductionExceptionHandler
   profiles:
     active: dev
 management:
+  endpoints:
+    web:
+     exposure:
+       exclude: health,info,metrics,kafkastreams
   endpoint:
     health:
       probes:
         enabled: true
-  health:
-    liveness-state: true
-    readiness-state: true
+    kafkastreams:
+      enabled: true
+

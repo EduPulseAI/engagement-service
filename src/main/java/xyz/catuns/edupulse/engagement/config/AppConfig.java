@@ -7,9 +7,12 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import xyz.catuns.edupulse.engagement.config.properties.AppProperties;
+import xyz.catuns.edupulse.engagement.config.properties.ScoringProperties;
 
 @Configuration
-@EnableConfigurationProperties(AppProperties.class)
+@EnableConfigurationProperties(value = {
+        AppProperties.class,
+        ScoringProperties.class})
 class AppConfig {
 
 	@Bean
