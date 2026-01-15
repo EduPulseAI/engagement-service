@@ -63,12 +63,56 @@ public class EngagementScoringService {
                 .build();
     }
 
-    private EngagementTrend determineTrend(double finalScore, StudentEngagementState aggregate) {
-        return null;
+    private EngagementTrend determineTrend(double score, StudentEngagementState aggregate) {
+        if (score < config.getThresholds().getAlert()) {
+            return EngagementTrend.CRITICAL;
+        }
+
+        // Declining - warning zone
+        if (score < config.getThresholds().getYellow()) {
+            return EngagementTrend.DECLINING;
+        }
+
+        // For RISING vs STABLE, we'd need historical context
+        // For now, use heuristics based on current window
+
+        // Good performance indicators
+        boolean goodAccuracy = aggregate.getCorrectnessRate() > 0.7;
+        boolean healthyPace = aggregate.getAverageTimeSpent() >= config.getThresholds().getTime().getRushingMs()
+                && aggregate.getAverageTimeSpent() <= config.getThresholds().getTime().getStrugglingMs();
+
+        if (goodAccuracy && healthyPace && score >= 0.8) {
+            return EngagementTrend.RISING;
+        }
+
+        return EngagementTrend.STABLE;
     }
 
-    private double applyPatternPenalties(double compositeScore, StudentEngagementState aggregate) {
-        return compositeScore;
+    private double applyPatternPenalties(double baseScore, StudentEngagementState aggregate) {
+        double adjustedScore = baseScore;
+
+        // Rapid incorrect submissions penalty
+//        if (aggregate.hasRapidIncorrectPattern()) {
+//            adjustedScore *= config.getRapidIncorrectPenalty();
+//            log.debug("Applied rapid incorrect penalty: {} -> {}", baseScore, adjustedScore);
+//        }
+
+        // Struggling penalty
+//        if (aggregate.isStrugglingPattern()) {
+//            adjustedScore *= config.getStrugglingPenalty();
+//            log.debug("Applied struggling penalty: {} -> {}", baseScore, adjustedScore);
+//        }
+
+        // Excessive hints penalty
+//        if (aggregate.getTotalAnswers() > 0) {
+//            double avgHints = (double) aggregate.getTotalHintsUsed() / aggregate.getTotalAnswers();
+//            if (avgHints >= config.getExcessiveHintsThreshold()) {
+//                adjustedScore *= config.getHintPenaltyFactor();
+//                log.debug("Applied excessive hints penalty: {} -> {}", baseScore, adjustedScore);
+//            }
+//        }
+
+        return adjustedScore;
     }
 
     private double calculatePacingScore(StudentEngagementState aggregate) {

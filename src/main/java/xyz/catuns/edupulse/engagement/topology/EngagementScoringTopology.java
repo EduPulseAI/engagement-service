@@ -12,6 +12,7 @@ import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.Stores;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.support.serializer.JsonSerde;
 import org.springframework.stereotype.Component;
 import xyz.catuns.edupulse.common.messaging.events.engagement.EngagementScore;
 import xyz.catuns.edupulse.common.messaging.events.quiz.QuizAnswer;
@@ -85,7 +86,7 @@ public class EngagementScoringTopology {
 
         // 2. Group by studentId and window (tumbling/hopping)
         KGroupedStream<String, EnrichedEvent> groupedStream = mergedStream
-                .groupByKey(Grouped.with(Serdes.String(), null));
+                .groupByKey(Grouped.with(Serdes.String(), new JsonSerde<>(EnrichedEvent.class)));
 
         TimeWindows timeWindows = TimeWindows.ofSizeAndGrace(
                 Duration.ofSeconds(scoringProperties.getWindow().getDurationSeconds()),
