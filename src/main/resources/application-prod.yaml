@@ -7,3 +7,7 @@ logging:
       catuns:
         edupulse:
           engagement: info
+management:
+  endpoint:
+    health:
+      show-details: never

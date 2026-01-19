@@ -35,6 +35,11 @@
 	<properties>
 		<java.version>21</java.version>
         <confluent.version>8.1.0</confluent.version>
+        <docker.registry>us-central1-docker.pkg.dev</docker.registry>
+        <docker.project>edupulse-483220</docker.project>
+        <docker.repository>edupulse</docker.repository>
+        <image.name>${docker.registry}/${docker.project}/${docker.repository}/${project.artifactId}:${project.version}
+        </image.name>
 	</properties>
 
 	<dependencies>
@@ -87,6 +92,11 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <image>
+                        <name>${image.name}</name>
+                    </image>
+                </configuration>
 			</plugin>
 		</plugins>
 	</build>

@@ -15,9 +15,6 @@ app:
       duration-seconds: 60
       grace-period-seconds: 5
 
-    baseline:
-      expected-time-per-question-seconds: 120
-      expected-questions-per-minute: 0.5
   kafka:
     partitions: 1
     topics:
@@ -80,12 +77,15 @@ spring:
 management:
   endpoints:
     web:
-     exposure:
-       exclude: health,info,metrics,kafkastreams
+      exposure:
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       probes:
         enabled: true
-    kafkastreams:
+      show-details: when_authorized
+  health:
+    livenessState:
       enabled: true
-
+    readinessState:
+      enabled: true
